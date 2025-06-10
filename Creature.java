@@ -19,8 +19,8 @@ public class Creature {
         this.env = environment;
     }
 
-    public boolean tryCreate(Creature crt) {
-        if (crt.isMovePossible(crt.x, crt.y)) {
+    public boolean tryCreate(Creature crt,boolean ignoreGrass) {
+        if (crt.isMovePossible(crt.x, crt.y,ignoreGrass)) {
             env.creatures.add(crt);
             return true;
         }
@@ -29,11 +29,15 @@ public class Creature {
         return false;
     }
 
-    public boolean isMovePossible(int new_x, int new_y) {
+    public boolean isMovePossible(int new_x, int new_y,boolean ignoreGrass) {
         // if (new_x < 0 || new_x > env.ekran.getWidth()) return false;
         // if (new_y < 0 || new_y > env.ekran.getHeight() ) return false;
+
+
+        // return true;
+        //burdan sonrasını açarsın
         for (Creature creature : env.creatures) {
-            if (creature instanceof Grass) continue;
+            if (ignoreGrass && creature instanceof Grass) continue;
             if (creature == this)
                 continue;
             if (new Rectangle(new_x, new_y, width, height)
@@ -49,7 +53,7 @@ public class Creature {
     }
 
     public void draw(Graphics g) {
-        g.setColor(Color.red);
+        g.setColor(this.clr);
         g.fillOval(x, y, width, height);
     }
 

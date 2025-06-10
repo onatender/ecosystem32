@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 public class Animal extends Organism {
 
-    public int Hungry = 40;
+    public int Hungry = 60;
     public int speed = 3;
     public Creature Following;
     public Creature Partner;
@@ -13,11 +13,21 @@ public class Animal extends Organism {
     public int Damage = 1;
     public Animal RunFrom;
 
+    public boolean Facing;
+
+    public int GetEffectiveSpeed() {
+        System.out.println("speed:"+this.speed);
+        System.out.println("hungry:"+this.Hungry);
+        
+     return (int)((float)(this.speed*(100-(this.Hungry>100?100:this.Hungry)))/100)+1;
+    }
+
     public void drawinfo(Graphics g) {
         g.setColor(Color.white);
         g.drawString("Health:" + this.Health, this.x - 10, this.y - 5);
         g.drawString("Hunger:" + this.Hungry, this.x - 10, this.y - 17);
         g.drawString("Gender:" + this.Gender, this.x - 10, this.y - 29);
+        g.drawString("Age:" + this.ageTicks/100, this.x - 10, this.y - 41);
     }
 
     public void Reproduce() {
@@ -81,59 +91,106 @@ public class Animal extends Organism {
             MoveTo(x - x_difference, y - y_difference);
         }
     }
-
     public void MoveTo(int target_x, int target_y) {
-        int x_difference = target_x - this.x;
-        int y_difference = target_y - this.y;
+        int dx = target_x - this.x;
+        int dy = target_y - this.y;
 
-        int new_x = this.x;
-        int new_y = this.y;
+        if (dx == 0 && dy == 0) return; // zaten hedefteyse
 
-        if (x_difference != 0 && y_difference != 0) {
-            speed = Math.abs(speed);
-        }
+        int speed = GetEffectiveSpeed();
+        double distance = Math.sqrt(dx * dx + dy * dy);
 
-        if (x_difference > 0) // sağa gitmeli
-        {
-            if (Math.abs(x_difference) >= speed) {
-                new_x += speed;
-            } else {
-                new_x += Math.abs(x_difference);
-            }
-        }
-        if (x_difference < 0) // sola gitmeli
-        {
-            if (Math.abs(x_difference) >= speed) {
-                new_x -= speed;
-            } else {
-                new_x -= Math.abs(x_difference);
-            }
-        }
+        // Normalize edilip hızla çarpılan bileşenler
+        double vx = (dx / distance) * speed;
+        double vy = (dy / distance) * speed;
 
-        if (y_difference > 0) // sağa gitmeli
-        {
-            if (Math.abs(y_difference) >= speed) {
-                new_y += speed;
-            } else {
-                new_y += Math.abs(y_difference);
-            }
+        // Yeni pozisyonlar
+        int new_x = this.x + (int)Math.round(vx);
+        int new_y = this.y + (int)Math.round(vy);
+
+        // Facing değerini sağa (true) veya sola (false) göre ayarla
+        if (new_x > this.x) {
+            this.Facing = true; // sağa bakıyor
+        } else if (new_x < this.x) {
+            this.Facing = false; // sola bakıyor
         }
-        if (y_difference < 0) // sola gitmeli
-        {
-            if (Math.abs(y_difference) >= speed) {
-                new_y -= speed;
-            } else {
-                new_y -= Math.abs(y_difference);
-            }
-        }
-        // kendisini kontrolden çıkar ve yanlış iki şeyi kontrol ediyosun
-        if (this.isMovePossible(new_x, this.y)) {
+        // Hareket mümkünse uygula
+        if (this.isMovePossible(new_x, new_y, true)) {
             this.x = new_x;
-        }
-        if (this.isMovePossible(this.x, new_y)) {
             this.y = new_y;
+        } else {
+            // Eğer çapraz gidemiyorsa ayrı ayrı deneriz
+            if (this.isMovePossible(new_x, this.y, true)) {
+                this.x = new_x;
+                // Facing değerini tekrar kontrol et
+                if (new_x > this.x) {
+                    this.Facing = true;
+                } else if (new_x < this.x) {
+                    this.Facing = false;
+                }
+            }
+            if (this.isMovePossible(this.x, new_y, true)) {
+                this.y = new_y;
+            }
         }
     }
+
+
+    // public void MoveTo(int target_x, int target_y) {
+    //     int x_difference = target_x - this.x;
+    //     int y_difference = target_y - this.y;
+
+    //     int new_x = this.x;
+    //     int new_y = this.y;
+
+    //     int speed = GetEffectiveSpeed();
+    //     System.out.println("effective:"+speed);
+
+    //     if (x_difference != 0 && y_difference != 0) {
+    //         speed = Math.abs(speed);
+    //     }
+
+    //     if (x_difference > 0) // sağa gitmeli
+    //     {
+    //         if (Math.abs(x_difference) >= speed) {
+    //             new_x += speed;
+    //         } else {
+    //             new_x += Math.abs(x_difference);
+    //         }
+    //     }
+    //     if (x_difference < 0) // sola gitmeli
+    //     {
+    //         if (Math.abs(x_difference) >= speed) {
+    //             new_x -= speed;
+    //         } else {
+    //             new_x -= Math.abs(x_difference);
+    //         }
+    //     }
+
+    //     if (y_difference > 0) // sağa gitmeli
+    //     {
+    //         if (Math.abs(y_difference) >= speed) {
+    //             new_y += speed;
+    //         } else {
+    //             new_y += Math.abs(y_difference);
+    //         }
+    //     }
+    //     if (y_difference < 0) // sola gitmeli
+    //     {
+    //         if (Math.abs(y_difference) >= speed) {
+    //             new_y -= speed;
+    //         } else {
+    //             new_y -= Math.abs(y_difference);
+    //         }
+    //     }
+    //     // kendisini kontrolden çıkar ve yanlış iki şeyi kontrol ediyosun
+    //     if (this.isMovePossible(new_x, this.y,true)) {
+    //         this.x = new_x;
+    //     }
+    //     if (this.isMovePossible(this.x, new_y,true)) {
+    //         this.y = new_y;
+    //     }
+    // }
 
     public Animal() {
 

@@ -63,6 +63,7 @@ public class Oyun extends JPanel implements KeyListener, ActionListener, MouseLi
     Timer timer = new Timer(interval(), this);// 60fps
     int ticks = 0;
     public ArrayList<Creature> varliklar = new ArrayList<Creature>();
+    public ArrayList<Particle> particles = new ArrayList<Particle>();
     public EnvironmentInfo env = new EnvironmentInfo();
     // private int gecen_sure = 0;
     // private int harcanan_ates = 0;
@@ -105,8 +106,13 @@ public class Oyun extends JPanel implements KeyListener, ActionListener, MouseLi
 
         env.ekran = ekran;
         env.creatures = varliklar;
+        env.particles = particles;
 
         timer.start();
+        tryCreate(new Grass(100, 100, 10, 10, env));
+        tryCreate(new Grass(1400, 800, 10, 10, env));
+        tryCreate(new Grass(100, 800, 10, 10, env));
+        tryCreate(new Grass(1400, 100, 10, 10, env));
     }
 
     @Override
@@ -130,8 +136,38 @@ public class Oyun extends JPanel implements KeyListener, ActionListener, MouseLi
         g.drawString("Hayattaki Otcul:" + otculsayisi, 20, 35);
         g.drawString("Hayattaki Etcil:" + predatorsayisi, 20, 50);
 
+        // ArrayList<Creature> hotbar = new ArrayList<Creature>();
+        // hotbar.add(new Herbivore(0, 0, 50, 50, env));
+        // hotbar.add(new Predator(0, 0, 50, 50, env));
+        // hotbar.add(new Grass(0, 0, 50, 50, env));
+        // hotbar.add(new BlackHole(0, 0, 50, 50, env));
+
+        // g.setColor(Color.white);
+        // g.drawRect(0, env.ekran.getHeight()-150, env.ekran.getWidth(),100);
+
+        // int soldanPay = 100;
+        // int index = 0;
+        // int width = 50;
+        // int height = 50;
+        // int araPay = 50;
+        // for (Creature item : hotbar) {
+        // item.width = width;
+        // item.height = height;
+        // item.x = soldanPay + width*index + araPay*(index-1);
+        // item.y = env.ekran.getHeight()-150+25;
+        // item.draw(g);
+        // index += 1;
+        // }
+
         for (Creature varlik : varliklar) {
             varlik.draw(g);
+        }
+        for (int i = 0; i < env.particles.size(); i++) {
+            env.particles.get(i).draw(g);
+            if (env.particles.get(i).lifetime == env.particles.get(i).ticksPlayed) {
+                env.particles.remove(i);
+                i--;
+            }
         }
         // super.paint(g);
         // g.setColor(Color.red);
@@ -165,8 +201,8 @@ public class Oyun extends JPanel implements KeyListener, ActionListener, MouseLi
         super.repaint();
     }
 
-     public boolean tryCreate(Creature crt) {
-        if (crt.isMovePossible(crt.x, crt.y)) {
+    public boolean tryCreate(Creature crt) {
+        if (crt.isMovePossible(crt.x, crt.y, true)) {
             env.creatures.add(crt);
             return true;
         }
@@ -175,27 +211,26 @@ public class Oyun extends JPanel implements KeyListener, ActionListener, MouseLi
         return false;
     }
 
-
     @Override
     public void actionPerformed(ActionEvent e) {
         ticks += 1;
 
-        if (ticks % realtimeToTick(1000) == 0)
-        while (!tryCreate(
-        new Grass(rnd.nextInt(ekran.getWidth()), rnd.nextInt(ekran.getHeight()), 10,
-        10, env)))
-        ;
+        if (ticks % realtimeToTick(500) == 0)
+            while (!tryCreate(
+                    new Grass(rnd.nextInt(ekran.getWidth()), rnd.nextInt(ekran.getHeight()), 10,
+                            10, env)))
+                ;
 
-        if (ticks % realtimeToTick(1000) == 0)
-        while (!tryCreate(
-        new Herbivore(rnd.nextInt(ekran.getWidth()), rnd.nextInt(ekran.getHeight()),
-        25, 25, env)))
-        ;
+        // if (ticks % realtimeToTick(1000) == 0)
+        // while (!tryCreate(
+        // new Herbivore(rnd.nextInt(ekran.getWidth()), rnd.nextInt(ekran.getHeight()),
+        // 25, 25, env)))
+        // ;
 
-        if (ticks % realtimeToTick(6000) == 0)
-        while (!tryCreate(new Predator(rnd.nextInt(ekran.getWidth()),
-        rnd.nextInt(ekran.getHeight()), 25, 25, env)))
-        ;
+        // if (ticks % realtimeToTick(6000) == 0)
+        // while (!tryCreate(new Predator(rnd.nextInt(ekran.getWidth()),
+        // rnd.nextInt(ekran.getHeight()), 25, 25, env)))
+        // ;
 
         if (ticks % realtimeToTick(1000) == 0) {
             for (Creature varlik : varliklar) {
@@ -217,6 +252,7 @@ public class Oyun extends JPanel implements KeyListener, ActionListener, MouseLi
             if (varliklar.get(i) instanceof Organism)
                 if (((Organism) (varliklar.get(i))).Health <= 0) {
                     varliklar.remove(i); // kill
+                    i--;//hata verdirebilir
                 }
         }
         // gecen_sure+=5;
@@ -289,7 +325,10 @@ public class Oyun extends JPanel implements KeyListener, ActionListener, MouseLi
             varlik = new Predator(e.getX(), e.getY(), 25, 25, env);
 
         else {
+            // varlik = new BlackHole(e.getX(), 0, 50, 25000, env);
+
             for (Creature v : varliklar) {
+
                 if (new Rectangle(e.getX(), e.getY(), 5, 5)
                         .intersects(new Rectangle(v.x, v.y, v.width, v.height)))
                     ((Organism) (v)).kill();
@@ -297,7 +336,8 @@ public class Oyun extends JPanel implements KeyListener, ActionListener, MouseLi
             return;
         }
 
-        varlik.tryCreate(varlik);
+        ((Organism) varlik).ageTicks = 1800;
+        varlik.tryCreate(varlik, true);
 
     }
 

@@ -6,15 +6,21 @@ public class Organism extends Creature {
     public Genders Gender;
     public enum Genders {MALE,FEMALE};
     public int NutritionValue;
+    public int MatingTimeLeft;
 
-    public int GestationPeriod = 250;
+    public int GestationPeriod = 500;
     public int PregnancyTime;
     public boolean isPregnant;
+    public int ageTicks = 0;
+    public int minReproduceAge;
 
-    public void GiveBirth() {
-        isPregnant = false;
-        PregnancyTime = 0;
+    public int LifeTimeTicks = 10000;
+
+    public void Age() {
+        ageTicks += 1;
+        if (ageTicks > LifeTimeTicks) this.kill();
     }
+
 
     public void TakeDamage(int damage) {
         this.Health -= damage;
@@ -43,6 +49,7 @@ public class Organism extends Creature {
     public Organism() {
 
     }
+
 
     public void LifeCycle() {};
    
